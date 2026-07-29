@@ -2244,15 +2244,15 @@
       const requestedLegalDocument = window.location.hash.slice(1);
       const hasPublicRoute = Boolean(publicID || cancellationToken || reviewCode || receiptToken || tableID);
       document.title = tableID
-        ? "Speisekarte | Haviko"
+        ? "Speisekarte - Haviko"
         : receiptToken
-        ? "Digitale Rechnung | Haviko"
+        ? "Digitale Rechnung - Haviko"
         : reviewCode
-          ? "Bewertung | Haviko"
+          ? "Bewertung - Haviko"
           : cancellationToken
-            ? "Reservierung verwalten | Haviko"
+            ? "Reservierung verwalten - Haviko"
             : publicID
-              ? "Tisch reservieren | Haviko"
+              ? "Tisch reservieren - Haviko"
               : "Haviko | Restaurantsoftware";
       let siteStarted = false;
       let previewUnlocked = false;
