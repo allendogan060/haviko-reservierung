@@ -521,6 +521,28 @@
       cursor: pointer;
     }
 
+    .menu-list { display: grid; gap: 22px; }
+    .menu-category-title {
+      margin: 0 0 10px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--action, #087966);
+      color: var(--forest-deep, #063c32);
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .menu-items { display: grid; gap: 10px; }
+    .menu-item { display: flex; align-items: baseline; gap: 8px; }
+    .menu-item-name { color: var(--ink, #14211d); font-size: 15px; font-weight: 600; }
+    .menu-item-dots {
+      flex: 1;
+      border-bottom: 1px dotted var(--line, #d9e4e0);
+      transform: translateY(-4px);
+      min-width: 12px;
+    }
+    .menu-item-price { color: var(--forest-deep, #063c32); font-size: 15px; font-weight: 700; white-space: nowrap; }
+
     .stepbar {
       border-bottom: 1px solid var(--line);
       background: color-mix(in srgb, white 94%, transparent);
@@ -2968,10 +2990,19 @@
           list.push(item);
           byCategory.set(item.category, list);
         });
-        return [...byCategory.entries()].map(([category, items]) => `
-          <div><strong>${escapeHTML(category)}</strong><br>${items.map((item) =>
-            `${escapeHTML(item.name)} · ${new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(Number(item.price || 0))}`
-          ).join("<br>")}</div>`).join("");
+        const formatPrice = (value) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(Number(value || 0));
+        return `<div class="menu-list">${[...byCategory.entries()].map(([category, items]) => `
+          <div class="menu-category">
+            <h3 class="menu-category-title">${escapeHTML(category || "Speisen")}</h3>
+            <div class="menu-items">
+              ${items.map((item) => `
+                <div class="menu-item">
+                  <span class="menu-item-name">${escapeHTML(item.name)}</span>
+                  <span class="menu-item-dots"></span>
+                  <span class="menu-item-price">${formatPrice(item.price)}</span>
+                </div>`).join("")}
+            </div>
+          </div>`).join("")}</div>`;
       }
 
       async function loadTableView(publicIDValue, tableIDValue) {
