@@ -1040,6 +1040,30 @@
       gap: 10px;
     }
 
+    .guest-portal-notice {
+      margin-top: 28px;
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--soft, #f2f6f4);
+      text-align: center;
+    }
+    .guest-portal-title { margin: 0 0 6px; color: var(--forest-deep, #063c32); font-size: 16px; font-weight: 800; }
+    .guest-portal-notice .field-hint { margin: 0 0 14px; }
+    .guest-portal-notice .form-error {
+      display: none;
+      margin: 0 0 14px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #efbdc4;
+      background: #fdecee;
+      color: #9b2f3d;
+      font-size: 13px;
+    }
+    .guest-portal-notice .form-error.visible { display: block; }
+    .guest-portal-notice .form-error.success { border-color: #a9dcc7; background: #e6f6ee; color: #0a6b45; }
+    .guest-portal-notice .full { width: 100%; }
+
     .rating-form {
       max-width: 520px;
       margin: 24px auto 0;
@@ -1679,6 +1703,13 @@
           <button class="secondary" type="button" id="copy-confirmation">Nummer kopieren</button>
           <button class="secondary hidden" type="button" id="manage-reservation">Reservierung verwalten</button>
           <button class="primary" type="button" id="new-booking">Weitere Reservierung</button>
+        </div>
+
+        <div class="guest-portal-notice" id="guest-portal-notice">
+          <p class="guest-portal-title">Dein Gastportal-Zugang ist aktiv!</p>
+          <p class="field-hint">Melde dich mit deiner E-Mail-Adresse an, um deine Reservierungen, digitalen Rechnungen und deine Stempelkarte jederzeit zu sehen.</p>
+          <p class="form-error" id="guest-portal-message" role="alert"></p>
+          <button class="secondary full" type="button" id="guest-portal-signin">Im Gastportal anmelden</button>
         </div>
       </section>
 
@@ -2835,6 +2866,7 @@
             "hidden",
             !state.cancellationToken
           );
+          state.guestEmail = $("email").value.trim();
           window.scrollTo({ top: 0, behavior: "smooth" });
         } catch (error) {
           if (error.message.includes("Waitlist is full")) {
@@ -3251,6 +3283,37 @@
         $("summary-panel").classList.toggle("expanded")
       );
       $("new-booking").addEventListener("click", () => window.location.reload());
+
+      $("guest-portal-signin").addEventListener("click", async () => {
+        const email = state.guestEmail || "";
+        const button = $("guest-portal-signin");
+        const messageEl = $("guest-portal-message");
+        messageEl.classList.remove("visible", "success");
+        if (!/^\S+@\S+\.\S+$/.test(email)) {
+          messageEl.textContent = "Bitte gib bei der Reservierung eine gültige E-Mail-Adresse an.";
+          messageEl.classList.add("visible");
+          return;
+        }
+        button.disabled = true;
+        button.textContent = "Wird gesendet …";
+        try {
+          const response = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+            method: "POST",
+            headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({ email, create_user: true, options: { emailRedirectTo: "https://gastportal.haviko.de/" } })
+          });
+          if (!response.ok) throw new Error("Der Anmeldelink konnte gerade nicht gesendet werden.");
+          messageEl.textContent = `Ein sicherer Anmeldelink wurde an ${email} gesendet.`;
+          messageEl.classList.add("visible", "success");
+          button.textContent = "Link erneut senden";
+        } catch (error) {
+          messageEl.textContent = error.message || "Der Anmeldelink konnte nicht gesendet werden.";
+          messageEl.classList.add("visible");
+          button.textContent = "Im Gastportal anmelden";
+        } finally {
+          button.disabled = false;
+        }
+      });
       $("copy-confirmation").addEventListener("click", async () => {
         await navigator.clipboard.writeText(state.confirmationNumber);
         $("copy-confirmation").textContent = "Kopiert";
