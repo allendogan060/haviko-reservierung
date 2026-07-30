@@ -3422,6 +3422,32 @@
         .map((value) => value.trim())
         .some((value) => value === "haviko_preview_access=granted");
 
+      if (params.get("guestLocked") === "1") {
+        const lockedFields = {
+          "first-name": params.get("firstName") || "",
+          "last-name": params.get("lastName") || "",
+          "email": params.get("email") || "",
+          "phone": params.get("phone") || "",
+          "street": params.get("street") || "",
+          "house-number": params.get("houseNumber") || "",
+          "postal-code": params.get("postalCode") || "",
+          "city": params.get("city") || ""
+        };
+        for (const [id, value] of Object.entries(lockedFields)) {
+          const input = $(id);
+          if (!input) continue;
+          input.value = value;
+          input.disabled = true;
+        }
+        const contactFields = $("contact-fields");
+        if (contactFields) {
+          const hint = document.createElement("p");
+          hint.className = "field-hint full";
+          hint.textContent = "Diese Angaben stammen aus deinem Gästeportal-Profil und können hier nicht geändert werden. Passe sie bei Bedarf im Gästeportal unter Einstellungen an.";
+          contactFields.appendChild(hint);
+        }
+      }
+
       if (!DEVELOPMENT_MODE || hasSharedPreviewAccess) {
         openDevelopmentPreview();
       } else {
