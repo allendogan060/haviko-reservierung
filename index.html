@@ -521,6 +521,9 @@
       cursor: pointer;
     }
 
+    .menu-language-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+    .menu-language-toggle button { flex: 0 0 auto; }
+    .menu-language-toggle button:disabled { opacity: 0.5; cursor: default; }
     .menu-list { display: grid; gap: 22px; }
     .menu-category-title {
       margin: 0 0 10px;
@@ -2776,6 +2779,7 @@
         $("restaurant-info").classList.toggle("hidden", info.length === 0);
 
         const menu = snapshot?.menu || [];
+        lastMenuData = menu;
         if (menu.length) {
           $("public-menu").innerHTML = `<div><strong>Speisekarte</strong></div>${renderMenuHTML(menu)}`;
           $("public-menu").classList.remove("hidden");
@@ -3020,6 +3024,18 @@
         return info;
       }
 
+      let menuLanguage = "de";
+      let lastMenuData = [];
+
+      function refreshRenderedMenus() {
+        if ($("public-menu") && !$("public-menu").classList.contains("hidden")) {
+          $("public-menu").innerHTML = `<div><strong>Speisekarte</strong></div>${renderMenuHTML(lastMenuData)}`;
+        }
+        if ($("table-menu") && !$("table-menu").classList.contains("hidden")) {
+          $("table-menu").innerHTML = renderMenuHTML(lastMenuData);
+        }
+      }
+
       function renderMenuHTML(menu) {
         const byCategory = new Map();
         menu.forEach((item) => {
@@ -3028,13 +3044,20 @@
           byCategory.set(item.category, list);
         });
         const formatPrice = (value) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(Number(value || 0));
-        return `<div class="menu-list">${[...byCategory.entries()].map(([category, items]) => `
+        const hasEnglish = menu.some((item) => item.nameEN);
+        const toggle = hasEnglish
+          ? `<div class="menu-language-toggle">
+              <button type="button" class="secondary" data-menu-lang="de" ${menuLanguage === "de" ? "disabled" : ""}>Deutsch</button>
+              <button type="button" class="secondary" data-menu-lang="en" ${menuLanguage === "en" ? "disabled" : ""}>English</button>
+            </div>`
+          : "";
+        return `${toggle}<div class="menu-list">${[...byCategory.entries()].map(([category, items]) => `
           <div class="menu-category">
             <h3 class="menu-category-title">${escapeHTML(category || "Speisen")}</h3>
             <div class="menu-items">
               ${items.map((item) => `
                 <div class="menu-item">
-                  <span class="menu-item-name">${escapeHTML(item.name)}</span>
+                  <span class="menu-item-name">${escapeHTML(menuLanguage === "en" && item.nameEN ? item.nameEN : item.name)}</span>
                   <span class="menu-item-dots"></span>
                   <span class="menu-item-price">${formatPrice(item.price)}</span>
                 </div>`).join("")}
@@ -3062,6 +3085,7 @@
           $("table-restaurant-info").innerHTML = restaurantInfo.join("");
           $("table-restaurant-info").classList.toggle("hidden", restaurantInfo.length === 0);
           const menu = snapshot?.menu || [];
+          lastMenuData = menu;
           $("table-menu").innerHTML = menu.length
             ? renderMenuHTML(menu)
             : `<div>Die Speisekarte ist online noch nicht verfügbar.</div>`;
@@ -3329,6 +3353,12 @@
           `${window.location.pathname}?cancel=${encodeURIComponent(state.cancellationToken)}`;
       });
       $("cancel-reservation").addEventListener("click", cancelReservation);
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-menu-lang]");
+        if (!button) return;
+        menuLanguage = button.dataset.menuLang;
+        refreshRenderedMenus();
+      });
       $("review-visit").addEventListener("click", () => openReview(state.reviewCode));
       $("receipt-back").addEventListener("click", () => {
         window.location.href = window.location.pathname;
