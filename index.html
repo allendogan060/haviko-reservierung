@@ -2310,9 +2310,11 @@
       let siteStarted = false;
       let previewUnlocked = false;
 
+      const prefillGuests = Number(new URLSearchParams(location.search).get("guests"));
+      const prefillArea = new URLSearchParams(location.search).get("area") || "";
       const state = {
         snapshot: null,
-        guests: 2,
+        guests: prefillGuests > 0 ? prefillGuests : 2,
         selectedTime: null,
         selectedIsWaitlist: false,
         step: 1,
@@ -2758,6 +2760,9 @@
           option.textContent = area;
           return option;
         }));
+        if (prefillArea && configured.includes(prefillArea)) {
+          $("area").value = prefillArea;
+        }
         if (!configured.length) {
           showFatal(
             "Das Restaurant hat noch keinen online buchbaren Bereich eingerichtet.",
