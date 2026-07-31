@@ -3288,6 +3288,12 @@
           $("fatal").classList.add("hidden");
           $("stepbar").classList.remove("hidden");
           form.classList.remove("hidden");
+          const accentColorHex = state.snapshot?.restaurant?.settings?.accentColorHex;
+          if (accentColorHex && /^#?[0-9a-fA-F]{6}$/.test(accentColorHex)) {
+            const hex = accentColorHex.startsWith("#") ? accentColorHex : `#${accentColorHex}`;
+            document.documentElement.style.setProperty("--action", hex);
+            document.documentElement.style.setProperty("--forest", hex);
+          }
           configureRestaurant(state.snapshot);
         } catch (error) {
           const unpublished =
